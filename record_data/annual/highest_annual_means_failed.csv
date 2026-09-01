@@ -1,0 +1,2 @@
+﻿amedas_code,name,name_kana,name_en,latitude,longitude,altitude_m,station_type,elems,prec_no,block_no,etrn_name,match_status,candidate_block_nos,station_class,rank_url,record_value,record_date,record_status,record_rank_url
+71192,東祖谷,ヒガシイヤ,Higashiiya,33.87,133.978333,781,C,11112010,71,1677,東祖谷,exact,1677,a,https://www.data.jma.go.jp/stats/etrn/view/rank_a.php?prec_no=71&block_no=1677&year=&month=&day=&view=,,,temperature_not_found,https://www.data.jma.go.jp/stats/etrn/view/rank_a.php?prec_no=71&block_no=1677&year=&month=&day=&view=p1

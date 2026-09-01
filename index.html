@@ -1,0 +1,170 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+
+  <meta
+    name="viewport"
+    content="width=device-width, initial-scale=1.0"
+  >
+
+  <title>アメダス観測極値マップ 【最高記録・最低記録・月別記録】</title>
+
+  <!-- MapLibre GL JS -->
+  <link
+    rel="stylesheet"
+    href="https://unpkg.com/maplibre-gl@5/dist/maplibre-gl.css"
+  >
+
+  <link
+    rel="stylesheet"
+    href="style.css"
+  >
+</head>
+
+<body>
+  <header id="title-bar">
+
+    <h1>
+      アメダス観測極値マップ
+    </h1>
+
+    <div id="record-controls">
+
+      <select id="element-select">
+        <option value="tmax_high">
+          最高気温記録
+        </option>
+
+        <option value="tmin_high">
+          日最低気温の最高記録
+        </option>
+
+        <option value="tmax_low">
+          日最高気温の最低記録
+        </option>
+
+        <option value="tmin_low">
+          最低気温記録
+        </option>
+
+        <option value="tmean_month_high">
+          月平均気温の最高記録
+        </option>
+
+        <option value="tmean_month_low">
+          月平均気温の最低記録
+        </option>
+
+        <option value="tmean_year_high">
+          年平均気温の最高記録
+        </option>
+
+        <option value="tmean_year_low">
+          年平均気温の最低記録
+        </option>
+      </select>
+
+      <select id="period-select">
+        <option value="annual">通年</option>
+        <option value="01">1月</option>
+        <option value="02">2月</option>
+        <option value="03">3月</option>
+        <option value="04">4月</option>
+        <option value="05">5月</option>
+        <option value="06">6月</option>
+        <option value="07">7月</option>
+        <option value="08">8月</option>
+        <option value="09">9月</option>
+        <option value="10">10月</option>
+        <option value="11">11月</option>
+        <option value="12">12月</option>
+      </select>
+
+    </div>
+
+  </header>
+
+  <main>
+    <div id="map"></div>
+
+    <div id="status-message">
+      地図データを読み込み中…
+    </div>
+
+    <div id="legend">
+
+      <div class="panel-header">
+        <div class="legend-title">
+          ℃
+        </div>
+
+        <button
+          class="panel-toggle"
+          id="legend-toggle"
+          type="button"
+          aria-label="凡例を最小化"
+        >
+          −
+        </button>
+      </div>
+
+      <div
+        id="legend-content"
+        class="panel-content"
+      >
+        <div id="legend-rows"></div>
+      </div>
+
+    </div>
+
+    <div id="map-information">
+
+      <div class="panel-header">
+
+        <div class="information-title">
+          情報
+        </div>
+
+        <button
+          class="panel-toggle"
+          id="information-toggle"
+          type="button"
+          aria-label="情報を最小化"
+        >
+          −
+        </button>
+
+      </div>
+
+      <div
+        id="information-content"
+        class="panel-content"
+      >
+
+        <div>
+          気温データ：気象庁
+        </div>
+
+        <div id="data-update-date"></div>
+        <div>
+          ※更新日の前日までの記録が表示されます。
+        </div>
+
+        <div class="unofficial-notice">
+          ※当ページは気象庁の公開データを基に独自に作成したものです。<br>
+          　気象庁の公式サイトではありません。
+        </div>
+
+      </div>
+
+    </div>
+  </main>
+
+  <script
+    src="https://unpkg.com/maplibre-gl@5/dist/maplibre-gl.js"
+  ></script>
+
+  <script src="script.js"></script>
+</body>
+</html>
