@@ -4,6 +4,7 @@ import subprocess
 import sys
 import time
 from datetime import date, datetime, timedelta
+from zoneinfo import ZoneInfo
 from pathlib import Path
 
 import requests
@@ -55,7 +56,12 @@ def parse_arguments():
 
 def get_target_date(date_text):
     if date_text is None:
-        return date.today() - timedelta(days=1)
+        return (
+            datetime.now(
+                ZoneInfo("Asia/Tokyo")
+            ).date()
+            - timedelta(days=1)
+        )
 
     try:
         return datetime.strptime(

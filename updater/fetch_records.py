@@ -366,6 +366,17 @@ def extract_record_date(text: str, date_precision: str,) -> str:
 
     raise ValueError("date_precisionが不正です: " f"{date_precision}")
 
+def extract_stat_start(text: str) -> str:
+
+    match = re.search(r"(\d{4})/(\d{1,2})", text,)
+
+    if not match:
+        return ""
+
+    year, month = map(int, match.groups(),)
+
+    return (f"{year:04d}-" f"{month:02d}")
+
 def extract_record(session: requests.Session, url: str, target_row: str, date_precision: str,) -> dict:
 
     response = session.get(url, timeout=30,)
@@ -399,11 +410,19 @@ def extract_record(session: requests.Session, url: str, target_row: str, date_pr
             return {
                 "record_value": None,
                 "record_date": "",
-                "status":
-                    "first_rank_cell_missing",
+                "stat_start": "",
+                "status": "first_rank_cell_missing",
             }
 
         first_rank_text = (cells[1].get_text(" ", strip=True,))
+
+        # ---------------------------------------------
+        # 統計期間セル
+        # ---------------------------------------------
+
+        stat_period_text = (cells[-1].get_text(" ", strip=True,))
+
+        stat_start = extract_stat_start(stat_period_text)
 
         # 気温
         temp_match = re.search(r"(-?\d+(?:\.\d+)?)", first_rank_text,)
@@ -412,8 +431,8 @@ def extract_record(session: requests.Session, url: str, target_row: str, date_pr
             return {
                 "record_value": None,
                 "record_date": "",
-                "status":
-                    "temperature_not_found",
+                "stat_start": "",
+                "status": "temperature_not_found",
             }
 
         temperature = float(temp_match.group(1))
@@ -425,12 +444,18 @@ def extract_record(session: requests.Session, url: str, target_row: str, date_pr
                 temperature,
             "record_date":
                 record_date,
+            "stat_start":
+                stat_start,
             "status":
                 "success",
         }
 
-    return {"record_value": None, "record_date": "", "status": "target_row_not_found",}
-
+    return {
+        "record_value": None,
+        "record_date": "",
+        "stat_start": "",
+        "status": "target_row_not_found",
+    }
 
 # =========================================================
 # GeoJSON Feature生成
@@ -455,6 +480,8 @@ def make_feature(row: pd.Series,) -> dict:
             nullable_float(row.get("record_value")),
         "record_date":
             nullable_text(row.get("record_date")),
+        "stat_start":
+            nullable_text(row.get("stat_start")),
         "record_status":
             nullable_text(row.get("record_status")),
         "prec_no":
@@ -590,6 +617,7 @@ def main() -> None:
 
     records = []
     record_dates = []
+    stat_starts = []
     statuses = []
     actual_urls = []
     total = len(df)
@@ -617,6 +645,7 @@ def main() -> None:
         if not block_no:
             records.append(None)
             record_dates.append("")
+            stat_starts.append("")
             statuses.append("block_no_missing")
             actual_urls.append("")
             print("    skip: " "block_noなし")
@@ -660,18 +689,27 @@ def main() -> None:
             
             records.append(result["record_value"])
             record_dates.append(result["record_date"])
+            stat_starts.append(result["stat_start"])
             statuses.append(result["status"])
-            print("    " f"{result['record_value']} ℃ " f"{result['record_date']}")
+
+            print(
+                "    "
+                f"{result['record_value']} ℃ "
+                f"{result['record_date']} "
+                f"統計開始={result['stat_start']}"
+            )
 
         except (requests.RequestException) as exc:
             records.append(None)
             record_dates.append("")
+            stat_starts.append("")
             statuses.append(f"request_error: " f"{exc}")
             print(f"    ERROR: " f"{exc}")
 
         except Exception as exc:
             records.append(None)
             record_dates.append("")
+            stat_starts.append("")
             statuses.append(f"parse_error: " f"{exc}")
             print(f"    ERROR: " f"{exc}")
 
@@ -683,6 +721,7 @@ def main() -> None:
 
     df["record_value"] = records
     df["record_date"] = record_dates
+    df["stat_start"] = stat_starts
     df["record_status"] = statuses
     df["record_rank_url"] = actual_urls
 
