@@ -13,7 +13,7 @@ const OPENFREEMAP_STYLE =
   "https://tiles.openfreemap.org/styles/bright";
 
 const DATA_UPDATED_AT =
-  "2026年9月9日";
+  "2026年9月10日";
 
 const RECORD_TYPES = {
   tmax_high: {
@@ -150,6 +150,12 @@ let currentPeriod =
 
 let stationInteractionsInitialized =
   false;
+
+let activeStationPopup =
+  null;
+
+let activePopupAmedasCode =
+  null;
 
 
 /* =========================================================
@@ -1621,6 +1627,44 @@ function addStationLayers(
    ポップアップ
 ========================================================= */
 
+function formatStatStart(
+  value
+) {
+  if (!value) {
+    return "不明";
+  }
+
+  const text =
+    String(value);
+
+  let match =
+    text.match(
+      /^(\d{4})$/
+    );
+
+  if (match) {
+    return (
+      `${Number(match[1])}年 -`
+    );
+  }
+
+  match =
+    text.match(
+      /^(\d{4})-(\d{2})$/
+    );
+
+  if (match) {
+    return (
+      `${Number(match[1])}年` +
+      `${Number(match[2])}月 -`
+    );
+  }
+
+  return escapeHtml(
+    text
+  );
+}
+
 function createPopupHtml(
   properties
 ) {
@@ -1653,6 +1697,9 @@ function createPopupHtml(
   const date =
     properties.record_date;
 
+  const statStart =
+    properties.stat_start;
+
   const url =
     properties.record_rank_url;
 
@@ -1670,6 +1717,14 @@ function createPopupHtml(
           "記録：" +
           `<strong>${Number(value).toFixed(1)} ℃</strong>`
         );
+
+  const statStartText =
+    statStart
+      ? (
+          "統計期間：" +
+          formatStatStart(statStart)
+        )
+      : "統計期間：不明";
 
   const altitudeText =
     altitude === null ||
@@ -1705,6 +1760,9 @@ function createPopupHtml(
 
     <div class="popup-sub">
       ${dateLabel}：${formatDate(date)}
+      <br>
+
+      ${statStartText}
       <br>
 
       ${altitudeText}
@@ -1769,27 +1827,102 @@ function openStationPopup(
     return;
   }
 
-  new maplibregl.Popup({
-    offset: 16,
-    maxWidth: "320px",
-  })
-    .setLngLat([
-      Number(
-        coordinates[0]
-      ),
-      Number(
-        coordinates[1]
-      ),
-    ])
-    .setHTML(
-      createPopupHtml(
-        feature.properties ??
-        {}
+  if (activeStationPopup) {
+    activeStationPopup.remove();
+  }
+
+  activePopupAmedasCode =
+    feature.properties
+      ?.amedas_code ??
+    null;
+
+  activeStationPopup =
+    new maplibregl.Popup({
+      offset: 16,
+      maxWidth: "320px",
+    })
+      .setLngLat([
+        Number(
+          coordinates[0]
+        ),
+        Number(
+          coordinates[1]
+        ),
+      ])
+      .setHTML(
+        createPopupHtml(
+          feature.properties ??
+          {}
+        )
       )
-    )
-    .addTo(
-      map
+      .addTo(
+        map
+      );
+
+  activeStationPopup.on(
+    "close",
+    () => {
+      activeStationPopup =
+        null;
+
+      activePopupAmedasCode =
+        null;
+    }
+  );
+}
+
+
+function updateActiveStationPopup(
+  geojson
+) {
+  if (
+    !activeStationPopup ||
+    !activePopupAmedasCode
+  ) {
+    return;
+  }
+
+  const feature =
+    geojson.features.find(
+      (candidate) => {
+        return (
+          String(
+            candidate.properties
+              ?.amedas_code ??
+            ""
+          ) ===
+          String(
+            activePopupAmedasCode
+          )
+        );
+      }
     );
+
+  if (!feature) {
+    activeStationPopup.remove();
+    return;
+  }
+
+  const coordinates =
+    feature.geometry
+      ?.coordinates;
+
+  if (
+    Array.isArray(coordinates) &&
+    coordinates.length >= 2
+  ) {
+    activeStationPopup.setLngLat([
+      Number(coordinates[0]),
+      Number(coordinates[1]),
+    ]);
+  }
+
+  activeStationPopup.setHTML(
+    createPopupHtml(
+      feature.properties ??
+      {}
+    )
+  );
 }
 
 
@@ -1861,6 +1994,10 @@ async function loadStations() {
     );
 
   addStationLayers(
+    geojson
+  );
+
+  updateActiveStationPopup(
     geojson
   );
 

@@ -366,16 +366,39 @@ def extract_record_date(text: str, date_precision: str,) -> str:
 
     raise ValueError("date_precisionが不正です: " f"{date_precision}")
 
-def extract_stat_start(text: str) -> str:
+def extract_stat_start(
+    text: str,
+    date_precision: str,
+) -> str:
 
-    match = re.search(r"(\d{4})/(\d{1,2})", text,)
+    if date_precision == "year":
+        match = re.search(
+            r"(\d{4})年?",
+            text,
+        )
+
+        if not match:
+            return ""
+
+        return match.group(1)
+
+    match = re.search(
+        r"(\d{4})/(\d{1,2})",
+        text,
+    )
 
     if not match:
         return ""
 
-    year, month = map(int, match.groups(),)
+    year, month = map(
+        int,
+        match.groups(),
+    )
 
-    return (f"{year:04d}-" f"{month:02d}")
+    return (
+        f"{year:04d}-"
+        f"{month:02d}"
+    )
 
 def extract_record(session: requests.Session, url: str, target_row: str, date_precision: str,) -> dict:
 
@@ -422,7 +445,10 @@ def extract_record(session: requests.Session, url: str, target_row: str, date_pr
 
         stat_period_text = (cells[-1].get_text(" ", strip=True,))
 
-        stat_start = extract_stat_start(stat_period_text)
+        stat_start = extract_stat_start(
+            stat_period_text,
+            date_precision,
+        )
 
         # 気温
         temp_match = re.search(r"(-?\d+(?:\.\d+)?)", first_rank_text,)
