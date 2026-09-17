@@ -13,7 +13,7 @@ const OPENFREEMAP_STYLE =
   "https://tiles.openfreemap.org/styles/bright";
 
 const DATA_UPDATED_AT =
-  "2026年9月17日";
+  "2026年9月18日";
 
 const RECORD_TYPES = {
   tmax_high: {
